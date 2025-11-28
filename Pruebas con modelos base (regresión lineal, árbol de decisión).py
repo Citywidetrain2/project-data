@@ -2,43 +2,41 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-import kaggle
+from sklearn.metrics import mean_squared_error, r2_score
 
-# Download latest version
-path = kagglehub.dataset_download("faresashraf1001/supermarket-sales")
+# 1. Cargar datos
+df = pd.read_excel(r"C:\Users\anzol\OneDrive\Desktop\Diego Anzola Programacion-1\Proyecto\DataSupermercado.xlsx")
 
-print("Path to dataset files:", path)
+# 2. Limpieza de columnas
+df.columns = df.columns.str.strip()
 
-# 0. Datos (lee Excel correctamente)
-df = pd.read_excel("DATA_DISFRAZADA_SUPERMERCADO.xlsx")   
+# 3. Crear variables de tiempo
+df["Date"] = pd.to_datetime(df["Date"])
+df["Mes"] = df["Date"].dt.month
+df["DiaSemana"] = df["Date"].dt.dayofweek
 
-# Definición de las variables independientes (X) y dependiente (y)
-X = df.drop("target", axis=1)   # Cambia "target" por el nombre real de tu columna objetivo
-y = df["target"]
+# 4. Selección de variables relevantes (ajustadas a tu archivo)
+features = ["Mes", "DiaSemana", "Product line", "Unit price", "Quantity", "Payment", "Gender"]
+X = pd.get_dummies(df[features], drop_first=True)
+y = df["Sales"]  # variable objetivo real en tu archivo
 
-# 1. División en entrenamiento y prueba
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
+# 5. Dividir datos
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 2. Modelo base: Regresión Lineal
-lin_model = LinearRegression()
-lin_model.fit(X_train, y_train)
-y_pred_lin = lin_model.predict(X_test)
+# 6. Modelo de Regresión Lineal
+lin_reg = LinearRegression()
+lin_reg.fit(X_train, y_train)
+y_pred_lin = lin_reg.predict(X_test)
 
-print("\n=== Regresión Lineal ===")
+print("Regresión Lineal:")
 print("RMSE:", mean_squared_error(y_test, y_pred_lin, squared=False))
-print("MAE:", mean_absolute_error(y_test, y_pred_lin))
-print("R²:", r2_score(y_test, y_pred_lin))
+print("R2:", r2_score(y_test, y_pred_lin))
 
-# 3. Modelo base: Árbol de Decisión
-tree_model = DecisionTreeRegressor(max_depth=5, random_state=42)
-tree_model.fit(X_train, y_train)
-y_pred_tree = tree_model.predict(X_test)
+# 7. Modelo de Árbol de Decisión
+tree_reg = DecisionTreeRegressor(max_depth=5, random_state=42)
+tree_reg.fit(X_train, y_train)
+y_pred_tree = tree_reg.predict(X_test)
 
-print("\n=== Árbol de Decisión ===")
+print("\nÁrbol de Decisión:")
 print("RMSE:", mean_squared_error(y_test, y_pred_tree, squared=False))
-print("MAE:", mean_absolute_error(y_test, y_pred_tree))
-print("R²:", r2_score(y_test, y_pred_tree))
-
+print("R2:", r2_score(y_test, y_pred_tree))
