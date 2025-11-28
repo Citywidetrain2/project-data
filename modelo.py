@@ -22,3 +22,5 @@ optimizer = torch.optim.Adam(modelo.parameters(), lr=0.01)
 
 
 
+
+

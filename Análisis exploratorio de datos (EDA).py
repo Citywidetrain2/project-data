@@ -1,99 +1,66 @@
-# Librerías
+# Librerías necesarias
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
+import seaborn as sns
 
-# Configuración estética
-sns.set(style="whitegrid")
-plt.rcParams["figure.figsize"] = (10, 5)
+# Ruta absoluta al archivo Excel
+ruta_excel = r"C:\Users\anzol\OneDrive\Desktop\Diego Anzola Programacion-1\Proyecto\DataSupermercado.xlsx"
 
-# ============================
-# 1. Cargar y limpiar dataset
-# ============================
-df = pd.read_excel("DATA_DISFRAZADA_SUPERMERCADO.xlsx")
-df.columns = df.columns.str.strip()  # Elimina espacios ocultos
+# Cargar el archivo Excel
+df = pd.read_excel(ruta_excel)
 
-# ============================
-# 2. Información general
-# ============================
-print("Dimensiones del dataset:", df.shape)
-print("\nTipos de datos:\n", df.dtypes)
-print("\nValores nulos por columna:\n", df.isnull().sum())
-print("\nResumen estadístico:\n", df.describe())
+# Verificar que se cargó correctamente
+print("Primeras filas del dataset:")
+print(df.head())
 
-# ============================
-# 3. Distribución de ventas
-# ============================
-columna_ventas = None
-for col in ["VALORES", "Ventas"]:
-    if col in df.columns:
-        columna_ventas = col
-        break
+# 1. Vista inicial de los datos
+print("\nInformación general:")
+print(df.info())
 
-if columna_ventas:
-    plt.figure()
-    sns.histplot(df[columna_ventas], bins=30, kde=True)
-    plt.title(f"Distribución de {columna_ventas}")
-    plt.show()
+print("\nEstadísticas descriptivas:")
+print(df.describe())
 
-    # ============================
-    # 4. Outliers con boxplot
-    # ============================
-    plt.figure()
-    sns.boxplot(x=df[columna_ventas])
-    plt.title(f"Detección de outliers en {columna_ventas}")
-    plt.show()
+# 2. Distribución de variables categóricas
+print("\nDistribución por ciudad:")
+print(df['City'].value_counts())
 
-    # ============================
-    # 5. Tendencia temporal
-    # ============================
-    if "Fecha" in df.columns:
-        df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
-        ventas_por_fecha = df.groupby("Fecha")[columna_ventas].sum().reset_index()
+print("\nDistribución por línea de producto:")
+print(df['Product line'].value_counts())
 
-        plt.figure(figsize=(12, 6))
-        sns.lineplot(data=ventas_por_fecha, x="Fecha", y=columna_ventas)
-        plt.title(f"Tendencia de {columna_ventas} por fecha")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.show()
-
-    # ============================
-    # 6. Ventas por producto
-    # ============================
-    if "Producto" in df.columns:
-        plt.figure(figsize=(12, 6))
-        sns.barplot(data=df, x="Producto", y=columna_ventas, estimator=sum, ci=None)
-        plt.xticks(rotation=45)
-        plt.title(f"{columna_ventas} totales por producto")
-        plt.tight_layout()
-        plt.show()
-
-# ============================
-# 7. Correlaciones
-# ============================
-plt.figure(figsize=(8, 6))
-sns.heatmap(df.corr(numeric_only=True), annot=True, cmap="coolwarm", fmt=".2f")
-plt.title("Matriz de correlaciones")
+# 3. Visualizaciones básicas
+# Histograma de ventas
+plt.figure(figsize=(8,5))
+sns.histplot(df['Sales'], bins=30, kde=True)
+plt.title("Distribución de Ventas")
+plt.xlabel("Ventas")
+plt.ylabel("Frecuencia")
 plt.show()
 
-# ============================
-# 8. Segmentación temporal
-# ============================
-if "Fecha" in df.columns and columna_ventas:
-    df["Mes"] = df["Fecha"].dt.month
-    df["DiaSemana"] = df["Fecha"].dt.day_name()
+# Ventas por ciudad
+plt.figure(figsize=(8,5))
+sns.barplot(x="City", y="Sales", data=df, estimator=sum, ci=None)
+plt.title("Ventas Totales por Ciudad")
+plt.ylabel("Ventas Totales")
+plt.show()
 
-    plt.figure(figsize=(12, 6))
-    sns.barplot(data=df, x="Mes", y=columna_ventas, estimator=sum, ci=None)
-    plt.title(f"{columna_ventas} por mes")
-    plt.show()
+# Ventas por línea de producto
+plt.figure(figsize=(10,6))
+sns.barplot(x="Product line", y="Sales", data=df, estimator=sum, ci=None)
+plt.title("Ventas Totales por Línea de Producto")
+plt.xticks(rotation=45)
+plt.ylabel("Ventas Totales")
+plt.show()
 
-    plt.figure(figsize=(12, 6))
-    sns.barplot(data=df, x="DiaSemana", y=columna_ventas, estimator=sum, ci=None,
-                order=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"])
-    plt.title(f"{columna_ventas} por día de la semana")
-    plt.show()
+# Boxplot de rating por ciudad
+plt.figure(figsize=(8,5))
+sns.boxplot(x="City", y="Rating", data=df)
+plt.title("Distribución de Ratings por Ciudad")
+plt.show()
 
+# 4. Correlación entre variables numéricas
+plt.figure(figsize=(10,6))
+sns.heatmap(df.corr(numeric_only=True), annot=True, cmap="coolwarm")
+plt.title("Mapa de Correlaciones")
+plt.show()
 
 
