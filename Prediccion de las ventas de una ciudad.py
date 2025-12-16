@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
 
-# Ruta absoluta al archivo Excel
+# Ruta absoluta al archivo Excel (ajusta si tu archivo está en otra carpeta)
 ruta_excel = r"C:\Users\anzol\OneDrive\Desktop\Diego Anzola Programacion-1\Proyecto\DataSupermercado.xlsx"
 
 # 1. Cargar el archivo Excel
@@ -56,3 +56,4 @@ plt.xlabel("Fecha")
 plt.ylabel("Ventas")
 plt.legend()
 plt.show()
+
