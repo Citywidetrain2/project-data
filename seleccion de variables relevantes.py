@@ -39,3 +39,4 @@ print("RMSE:", mean_squared_error(y_test, y_pred, squared=False))
 importances = pd.Series(model.feature_importances_, index=X.columns)
 print("Importancia de variables:")
 print(importances.sort_values(ascending=False))
+

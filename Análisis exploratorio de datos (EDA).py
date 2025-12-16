@@ -63,5 +63,39 @@ sns.heatmap(df.corr(numeric_only=True), annot=True, cmap="coolwarm")
 plt.title("Mapa de Correlaciones")
 plt.show()
 
+# codigo para ver la primera grafica de forma completa 
 
+# Histograma de ventas completo
+plt.figure(figsize=(10,6))
+sns.histplot(df['Sales'], bins=50, kde=True, color="skyblue")
 
+# Ajustar límites para ver toda la distribución
+plt.xlim(df['Sales'].min(), df['Sales'].max())
+
+plt.title("Distribución Completa de Ventas")
+plt.xlabel("Valor de Ventas")
+plt.ylabel("Frecuencia")
+plt.show()
+
+# Histograma con zoom en valores bajos (ejemplo)
+plt.figure(figsize=(10,6))
+sns.histplot(df['Sales'], bins=50, kde=True, color="orange")
+plt.xlim(0, 1000)  # Ajusta este rango según tus datos
+plt.title("Zoom en Ventas Menores a 1000")
+plt.xlabel("Valor de Ventas")
+plt.ylabel("Frecuencia")
+plt.show()
+
+sns.histplot(df['Sales'], bins=30, kde=True)
+
+# Histograma de ventas completo (sin cortes)
+plt.figure(figsize=(10,6))
+sns.histplot(df['Sales'], bins=50, kde=True, color="steelblue")
+
+# Mostrar todo el rango de ventas
+plt.xlim(df['Sales'].min(), df['Sales'].max())
+
+plt.title("Distribución Completa de Ventas")
+plt.xlabel("Valor de Ventas")
+plt.ylabel("Frecuencia")
+plt.show()
