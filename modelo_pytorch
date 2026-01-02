@@ -1,0 +1,116 @@
+import torch
+import torch.nn as nn
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+
+# 1. Carga y Preparación de Datos con Ingeniería de Variables
+print("Cargando datos y extrayendo patrones temporales...")
+df = pd.read_excel("DATA_DISFRAZADA_SUPERMERCADO.xlsx")
+df['FECHA'] = pd.to_datetime(df['FECHA'])
+
+# Agrupamos por día para ver la tendencia real
+df_daily = df.groupby('FECHA')['VALORES'].sum().reset_index()
+
+# CREAMOS PISTAS PARA LA IA: Día correlativo, Mes del año y Día de la semana (0=Lunes, 6=Domingo)
+df_daily['Day_Index'] = np.arange(len(df_daily))
+df_daily['Mes'] = df_daily['FECHA'].dt.month
+df_daily['DiaSemana'] = df_daily['FECHA'].dt.dayofweek
+
+# Definimos X con 3 columnas de conocimiento y y con las ventas
+X = df_daily[['Day_Index', 'Mes', 'DiaSemana']].values.astype(np.float32)
+y = df_daily[['VALORES']].values.astype(np.float32)
+
+# Normalización profesional
+scaler_X = StandardScaler()
+scaler_y = StandardScaler()
+X_scaled = scaler_X.fit_transform(X)
+y_scaled = scaler_y.fit_transform(y)
+
+X_tensor = torch.FloatTensor(X_scaled)
+y_tensor = torch.FloatTensor(y_scaled)
+
+# 2. Arquitectura de Red Neuronal Profunda (Deep Learning)
+class RedVentasPro(nn.Module):
+    def __init__(self, input_dim):
+        super(RedVentasPro, self).__init__()
+        self.capas = nn.Sequential(
+            nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Dropout(0.1), # Evita el sobreajuste (overfitting)
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 1)
+        )
+    
+    def forward(self, x):
+        return self.capas(x)
+
+modelo = RedVentasPro(X.shape[1])
+optimizer = torch.optim.Adam(modelo.parameters(), lr=0.005) # lr ligeramente más bajo para mayor precisión
+criterion = nn.MSELoss()
+
+# 3. Entrenamiento Intensivo
+print("Entrenando modelo de alta precisión (1000 épocas)...")
+for epoch in range(1000):
+    modelo.train()
+    y_pred = modelo(X_tensor)
+    loss = criterion(y_pred, y_tensor)
+    
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    
+    if (epoch + 1) % 200 == 0:
+        print(f"Época {epoch+1}/1000 - Error (Loss): {loss.item():.4f}")
+
+# 4. Generar Datos para el Pronóstico del Siguiente Mes
+print("Generando proyección para los próximos 30 días...")
+last_date = df_daily['FECHA'].max()
+future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=30)
+
+df_future = pd.DataFrame({
+    'Day_Index': np.arange(len(df_daily), len(df_daily) + 30),
+    'Mes': future_dates.month,
+    'DiaSemana': future_dates.dayofweek
+})
+
+future_scaled = scaler_X.transform(df_future.values)
+future_tensor = torch.FloatTensor(future_scaled)
+
+modelo.eval()
+with torch.no_grad():
+    pred_future_scaled = modelo(future_tensor)
+    pred_future = scaler_y.inverse_transform(pred_future_scaled)
+    # Ajuste del modelo sobre el pasado para la gráfica
+    pred_past = scaler_y.inverse_transform(modelo(X_tensor))
+
+# 5. Gráfica de Dashboard Profesional (Estilo Dark)
+plt.style.use('dark_background')
+plt.figure(figsize=(15, 7))
+
+# Histórico Real
+plt.plot(df_daily['FECHA'], y, color='#45f5a1', label='Ventas Reales (Histórico)', linewidth=1.5, alpha=0.7)
+
+# Ajuste de la IA sobre el pasado
+plt.plot(df_daily['FECHA'], pred_past, color='#ff00ff', label='Ajuste de la IA', linestyle='--', alpha=0.6)
+
+# Predicción Futura (Siguiente Mes)
+plt.plot(future_dates, pred_future, color='#00d4ff', label='PRONÓSTICO PRÓXIMO MES', linewidth=3)
+plt.fill_between(future_dates, pred_future.flatten(), color='#00d4ff', alpha=0.2)
+
+# Formato y Títulos
+plt.title('SISTEMA DE PREDICCIÓN DE VENTAS: IA CON DEEP LEARNING', fontsize=16, color='white', pad=20)
+plt.xlabel('Evolución Temporal', fontsize=12)
+plt.ylabel('Monto Total Ventas ($)', fontsize=12)
+plt.grid(color='gray', linestyle=':', linewidth=0.5, alpha=0.5)
+plt.legend(loc='upper left')
+
+# Guardar y Mostrar
+plt.savefig('Prediccion_Ventas_Pro.png', dpi=300)
+plt.show()
+
+print("🏁 Proceso completado. La gráfica se ha guardado como 'Prediccion_Ventas_Pro.png'.")

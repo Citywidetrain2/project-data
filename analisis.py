@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 # Define paths
-INPUT_FILE = '/kaggle/input/supermarket-sales/SuperMarket Analysis.csv'
+INPUT_FILE = 'DATA_DISFRAZADA_SUPERMERCADO.xlsx'
 OUTPUT_FILE = 'cleaned_sales.csv'
 
 def load_and_clean_data():
@@ -11,7 +11,7 @@ def load_and_clean_data():
         print(f"Error: {INPUT_FILE} not found.")
         return
 
-    df = pd.read_csv(INPUT_FILE)
+    df = pd.read_excel(INPUT_FILE)
     
     # 1. Basic Inspection
     print("\n--- Initial Info ---")
