@@ -1,0 +1,152 @@
+import torch
+import torch.nn as nn
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+
+# =============================================================
+# 1. Carga y Preparación de Datos (Integrando nuevas columnas)
+# =============================================================
+print("Cargando datos y procesando categorías (City, Gender, etc.)...")
+# Asegúrate de que el nombre del archivo coincida con tu Excel
+df = pd.read_excel("DataSupermercado.xlsx") 
+df['Date'] = pd.to_datetime(df['Date'])
+
+# --- PROCESAMIENTO DE CATEGORÍAS (Encoding) ---
+# Seleccionamos las columnas de texto de tu imagen
+columnas_categoria = ['City', 'Customer type', 'Gender', 'Product line']
+
+# Convertimos texto a columnas numéricas (0 y 1)
+df_procesado = pd.get_dummies(df, columns=columnas_categoria)
+
+# Agrupamos por día para ver la tendencia real
+# Sumamos las ventas (Sales) y promediamos las categorías procesadas
+df_daily = df_procesado.groupby('Date').agg({
+    'Sales': 'sum',
+    **{col: 'mean' for col in df_procesado.columns if any(cat in col for cat in columnas_categoria)}
+}).reset_index()
+
+# Ingeniería de tiempo básica
+df_daily['Day_Index'] = np.arange(len(df_daily))
+df_daily['Mes'] = df_daily['Date'].dt.month
+df_daily['DiaSemana'] = df_daily['Date'].dt.dayofweek
+
+# Definimos X (todas las columnas excepto Date y Sales) e y (Ventas)
+X = df_daily.drop(['Date', 'Sales'], axis=1).values.astype(np.float32)
+y = df_daily[['Sales']].values.astype(np.float32)
+
+# Normalización profesional
+scaler_X = StandardScaler()
+scaler_y = StandardScaler()
+X_scaled = scaler_X.fit_transform(X)
+y_scaled = scaler_y.fit_transform(y)
+
+X_tensor = torch.FloatTensor(X_scaled)
+y_tensor = torch.FloatTensor(y_scaled)
+
+# =============================================================
+# 2. Arquitectura de Red Neuronal Profunda
+# =============================================================
+class RedVentasPro(nn.Module):
+    def __init__(self, input_dim):
+        super(RedVentasPro, self).__init__()
+        self.capas = nn.Sequential(
+            nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Dropout(0.1), 
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 1)
+        )
+    
+    def forward(self, x):
+        return self.capas(x)
+
+# El input_dim se ajusta automáticamente a las nuevas columnas
+modelo = RedVentasPro(X.shape[1])
+optimizer = torch.optim.Adam(modelo.parameters(), lr=0.005)
+criterion = nn.MSELoss()
+
+# =============================================================
+# 3. Entrenamiento Intensivo
+# =============================================================
+print(f"Entrenando modelo con {X.shape[1]} variables de entrada...")
+for epoch in range(1000):
+    modelo.train()
+    y_pred = modelo(X_tensor)
+    loss = criterion(y_pred, y_tensor)
+    
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    
+    if (epoch + 1) % 200 == 0:
+        print(f"Época {epoch+1}/1000 - Error (Loss): {loss.item():.4f}")
+
+# =============================================================
+# 4. Generar Datos para el Pronóstico del Siguiente Mes
+# =============================================================
+print("Generando proyección para los próximos 30 días...")
+last_date = df_daily['Date'].max()
+future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=30)
+
+# Para el futuro, mantenemos el promedio histórico de ciudades/géneros
+promedios_categorias = df_daily.drop(['Date', 'Sales', 'Day_Index', 'Mes', 'DiaSemana'], axis=1).mean()
+
+df_future = pd.DataFrame({
+    'Day_Index': np.arange(len(df_daily), len(df_daily) + 30),
+    'Mes': future_dates.month,
+    'DiaSemana': future_dates.dayofweek
+})
+
+# Añadimos los promedios de las categorías a cada fila futura
+for col, val in promedios_categorias.items():
+    df_future[col] = val
+
+# Asegurar que el orden de columnas sea igual al de entrenamiento
+df_future = df_future[df_daily.drop(['Date', 'Sales'], axis=1).columns]
+
+future_scaled = scaler_X.transform(df_future.values)
+future_tensor = torch.FloatTensor(future_scaled)
+
+modelo.eval()
+with torch.no_grad():
+    pred_future_scaled = modelo(future_tensor)
+    pred_future = scaler_y.inverse_transform(pred_future_scaled)
+    pred_past = scaler_y.inverse_transform(modelo(X_tensor))
+
+# =============================================================
+# 5. Gráfica de Dashboard Personalizada (Fondo Negro / Rojo Llamativo)
+# =============================================================
+plt.style.use('dark_background') # Establece el fondo negro
+plt.figure(figsize=(15, 7))
+
+# 1. Ventas Reales en BLANCO
+plt.plot(df_daily['Date'], y, color='#FFFFFF', label='Ventas Reales (Histórico)', linewidth=1.5, alpha=0.8)
+
+# 2. Ajuste de la IA en AZUL OSCURO (Línea punteada)
+plt.plot(df_daily['Date'], pred_past, color='#1A237E', label='Ajuste de la IA (Entrenamiento)', linestyle='--', alpha=0.9)
+
+# 3. Predicción Siguiente Mes en ROJO LLAMATIVO (Grosor aumentado para destacar)
+plt.plot(future_dates, pred_future, color='#FF0000', label='PRONÓSTICO PRÓXIMO MES', linewidth=4)
+
+# 4. Relleno bajo la predicción en ROJO suave (Efecto neón)
+plt.fill_between(future_dates, pred_future.flatten(), color='#FF0000', alpha=0.25)
+
+# Personalización de títulos y bordes
+plt.title('DASHBOARD IA: PROYECCIÓN ESTRATÉGICA DE VENTAS', fontsize=18, color='white', pad=25, fontweight='bold')
+plt.xlabel('Evolución Temporal', fontsize=12, color='#CCCCCC')
+plt.ylabel('Monto Total Ventas ($)', fontsize=12, color='#CCCCCC')
+
+# Rejilla sutil para no ensuciar el diseño
+plt.grid(color='#333333', linestyle=':', linewidth=0.5)
+
+# Leyenda con fondo transparente
+plt.legend(loc='upper left', frameon=False, fontsize=10)
+
+# Guardar la nueva versión
+plt.savefig('Dashboard_Ventas_Rojo_Blanco.png', dpi=300, facecolor='black')
+plt.show()
