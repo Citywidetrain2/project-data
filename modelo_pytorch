@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 # =============================================================
 print("Cargando datos y procesando categorías (City, Gender, etc.)...")
 # Asegúrate de que el nombre del archivo coincida con tu Excel
-df = pd.read_excel("DataSupermercado.xlsx") 
+df = pd.read_excel(r"C:\Users\anzol\OneDrive\Desktop\Diego Anzola Programacion-1\Proyecto\DataSupermercado.xlsx") 
 df['Date'] = pd.to_datetime(df['Date'])
 
 # --- PROCESAMIENTO DE CATEGORÍAS (Encoding) ---
