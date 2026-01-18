@@ -4,7 +4,10 @@ from sklearn.metrics import mean_squared_error, r2_score
 import xgboost as xgb
 
 # 1. Cargar datos
-df = pd.read_excel(r"C:\Users\anzol\OneDrive\Desktop\Diego Anzola Programacion-1\Proyecto\DataSupermercado.xlsx")
+df = pd.read_excel( 
+    #r"C:\Users\58424\OneDrive\Escritorio\Data\DataSupermercado.xlsx"
+    #r"C:\Users\anzol\OneDrive\Desktop\Diego Anzola Programacion-1\Proyecto\DataSupermercado.xlsx"
+)
 df.columns = df.columns.str.strip()
 
 # 2. Variables de tiempo

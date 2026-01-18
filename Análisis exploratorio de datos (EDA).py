@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Ruta absoluta al archivo Excel
-ruta_excel = r"C:\Users\anzol\OneDrive\Desktop\Diego Anzola Programacion-1\Proyecto\DataSupermercado.xlsx"
-
+ruta_excel = (
+    #r"C:\Users\58424\OneDrive\Escritorio\Data\DataSupermercado.xlsx"
+    #r"C:\Users\anzol\OneDrive\Desktop\Diego Anzola Programacion-1\Proyecto\DataSupermercado.xlsx"
+)
 # Cargar el archivo Excel
 df = pd.read_excel(ruta_excel)
 

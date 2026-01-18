@@ -6,7 +6,10 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 
 # 1. Cargar datos
-df = pd.read_excel(r"C:\Users\anzol\OneDrive\Desktop\Diego Anzola Programacion-1\Proyecto\DataSupermercado.xlsx")
+df = pd.read_excel( 
+    #r"C:\Users\58424\OneDrive\Escritorio\Data\DataSupermercado.xlsx"
+    #r"C:\Users\anzol\OneDrive\Desktop\Diego Anzola Programacion-1\Proyecto\DataSupermercado.xlsx"
+            )
 
 # 2. Limpieza de columnas
 df.columns = df.columns.str.strip()
